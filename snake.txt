@@ -1,0 +1,1061 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <conio.h>
+#include <windows.h>
+#include <time.h>
+#define wall 3
+#define snake 1
+#define food 2
+#define air 0
+#include <unistd.h>
+void color(short x);
+int rand_food_x(void);
+int rand_food_y(void);
+int judge_ (int x1 ,int y1, int s_x,int s_y);
+int judge_b (int x2 ,int y2, int s_x,int s_y);
+int judge_c (int x3 ,int y3, int s_x,int s_y);//以上为1p得分判定
+
+int judge_d (int x1 ,int y1, int s_x2,int s_y2);
+int judge_e (int x2 ,int y2, int s_x2,int s_y2);
+int judge_f (int x3 ,int y3, int s_x2,int s_y2);
+
+//上面为2p的分判定
+int blocks_fall(void);
+int main()
+  {
+
+
+
+    PlaySound(TEXT("sounds\\GMRemix.wav"),0,SND_FILENAME|SND_ASYNC);
+
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    CONSOLE_CURSOR_INFO cci;
+    GetConsoleCursorInfo(hOut,&cci);
+    cci.bVisible=0;
+    SetConsoleCursorInfo(hOut,&cci);//隐藏光标
+
+    srand(time(NULL));
+    int length = 6,l,cut;//
+    int length2 = 6;
+    int tim = 600;
+    int r1,r2,r3,r4,r5,r6,round1,round2,round3,round4,round5,round6;
+    int xa,xb,xc,xd,xe,xf,ya,yb,yc,yd,ye,yf;//用于后面生成多个食物
+    int xA,xB,xC,xD,xE,xF,yA,yB,yC,yD,yE,yF;//用于后面清除过期食物
+    int result = -1,scores = 0, lengrh = 4,result2 = -1,result3 = -1;
+    int result4 = -1,result5 = -1,result6 = -1;//2p
+    int scores2 = 0;
+
+    int i,j,m,n;//loop
+    int x1,y1,x2,y2,x3,x4,x5,y3,y4,y5;
+    int blocks_x[100],blocks_y[100];
+    //width 60 height30
+    int map[100][100];
+    int snake_x[100];
+    int snake_y[100];
+
+    int snake_x2[100];
+    int snake_y2[100];
+
+    int b1,b2,b3;//b1左增长的方块，b2右增长的方块
+    r1=r2=r3=r4=r5=r6=0;
+    xA=xB=xC=xD=xE=xF=yA=yB=yC=yD=yE=yF=0;
+    round1=round2=round3=round4=round5=round6=4;
+
+
+    //用于掉落物
+
+    r4 = 19;
+    round4 = 19;
+    r5 = 19;
+    round5 =19;
+    r6 = 20;
+    round6 = 20;
+        for(;;)
+        {  if(!kbhit())
+            {
+            color(15);
+            printf("\n\n\n\n\n\n\n\t\tSNAKEEE\n\t\t双人模式V4.0");
+            printf("\n\tPRESS ANY BUTTON TO START GAME\n\n\n\n\n\t\t\thaojie06");
+            getch();
+            Sleep(300);
+            color(7);
+            system("cls");
+
+            }
+            else
+
+            {   printf("游戏即将开始");
+
+                 system("cls");
+                break;
+            }
+                 printf("\n\tBEGIN\n\n\t操作1p：wasd 2p ：方向键\n\t\t按回车键继续");
+                 color(10);
+                 printf("\n\t1p:原谅色");
+                 color(9);
+                 printf("\t2p:蓝色");
+                 color(7);
+
+                 getchar();
+                 printf("\n\n选择游戏速度:\t1.slow 2.medium 3.fast 4.crazy_");
+                 scanf("%d",&i);
+                 system("cls");
+                 switch(i)
+                 {
+
+             case 1:
+                printf("\n慢慢来慢慢来~");
+                tim = 900;
+                Sleep(1000);
+                break;
+             case 2 :
+                printf("\n这个很正常哟");
+                tim = 500;
+                Sleep(1000);
+                break;
+             case 3:
+                printf("\n少年不错哟");
+                tim = 250;
+                Sleep(1000);
+                break;
+             case 4:
+                printf("\n哇！你在想什么呢？？");
+                tim = 80;
+                Sleep(1000);
+                break;
+             default :
+                printf("\n你输入了啥？/");
+                printf("不给不认识1234的人玩了~byebye");
+                exit(0);
+
+                 }
+
+
+             break;
+        }
+
+       for(i=0;i<100;i++)
+    {
+        snake_x[i] = 0;
+        snake_x2[i] = 0;
+    }
+
+
+    for(i=0;i<100;i++)
+    {
+        snake_y[i] = 0;
+        snake_y2[i] = 0;
+    }
+    //清空
+        for(i=0; i<100;i++)
+       {
+        for(j=0;j<100;j++)
+        {
+            map[i][j] = 0;
+        }
+       }
+
+        int dir1 =-1,dir2 = 0;//初始方向
+        int dir3 = 0 , dir4 = -1;//2p 的初始方向dir3 为上下
+           for(i = 0; i <50; i++)
+           {
+               snake_x[i] = 12  ;//future
+           } // 1p x 坐标
+
+           for(i = 0 ; i <50;i++)
+           {
+               snake_y[i] = 3+i;
+           }// 1p y 坐标
+
+           for(i = 0;i< 50; i++)
+           {
+               snake_x2[i] = 5 + i ; //maybe wrong 2p direct
+           }
+
+           for(i = 0;i<50; i++)
+           {
+               snake_y2[i] = 15;
+           }
+
+        while(1)
+
+        {
+
+        if (!kbhit())//移动行为 先移动坐标再赋值//问题可能在这呢
+        {
+            for(i = 50;i>0;i--)
+            {
+                snake_x[i] = snake_x[i-1];
+            }
+
+            for(i = 50;i>0;i--)
+            {
+                snake_y[i] = snake_y[i - 1];
+            }
+
+            //2p
+            for(i = 50;i>0;i--)
+            {
+                snake_x2[i] = snake_x2[i-1];
+            }
+
+            for(i = 50;i>0;i--)
+            {
+                snake_y2[i] = snake_y2[i - 1];
+            }
+
+            snake_x[0] += dir1;
+            snake_y[0] += dir2; //注意此处可能越界
+
+            snake_x2[0] += dir3;
+            snake_y2[0] += dir4;
+            //1p 身体
+            for(i=50;i>length-1;i--)
+            {
+               map[snake_x[i]][snake_y[i]] = 0;
+            }
+            for(i = 0;i < length ;i++)
+            {
+
+
+                map[snake_x[i]][snake_y[i]] = 8;  // ！！！！！！注意 8 为1p身体
+
+            }
+            map[snake_x[0]][snake_y[0]] = 5;
+            //下面为2p身体
+            for(i=50;i>length2 - 1;i--)
+            {
+               map[snake_x2[i]][snake_y2[i]] = 0;
+            }
+            for(i = 0;i < length2 ;i++)
+            {
+
+
+                map[snake_x2[i]][snake_y2[i]] = 9;  // ！！！！！！注意 9对应2P身体
+
+            }
+            map[snake_x2[0]][snake_y2[0]] = 6 ;  //!此处自定义
+
+            system("cls");
+
+            //print
+
+
+    for(i=0;i<21;i++)//竖向的边界
+    {
+        map[i][0] = wall;
+        map[i][21] = wall;
+    }
+
+    for(j=0;j<21;j++)  //横向的边界
+    {
+        map[0][j] =wall;
+        map[20][j] =wall;
+    }
+    //上面为地图
+
+
+        for(i=0;i<24;i++)
+        {
+        for(j=0;j<24;j++)
+        {
+            if(map[i][j] == wall)
+            {
+                color(11);
+                printf("※");//wall
+                color(7);
+            }
+                else if(map[i][j] == 8)
+                {   color(2);
+                    printf("■");//1p身体
+                    color(7);
+                }
+                else if(map[i][j] == 9)
+                {
+                    color(1);
+                    printf("■");//2p身体
+                    color(7);
+
+                }
+                else if(map[i][j] == 0 )
+                {
+                    printf("  ");//air
+                }
+                else if(map[i][j] == 2)
+                {   color(14);
+                    printf("$ "); //food
+                    color(7);
+                }
+                else if(map[i][j] ==5)
+                {   color(10);
+                    printf("■");//p1 head
+                     color(7);
+                }
+                else if(map[i][j] == 4)
+                {  color(12);
+                    printf("※");
+                    color(7);
+                }
+                else if(map[i][j] == 6)
+                {  color(9);
+                    printf("■");//p2 h
+                    color(7);
+                }
+            }
+                printf("\n");
+
+
+        }
+
+        //生成食物
+        if(r1 == round1)
+          {
+        do
+          { round1 = rand() % 10 + 25 +l*2;
+           r1 = 0;
+          map[xA][yA] = 0;
+          xa = rand_food_x();
+          ya  = rand_food_y();
+          xA = xa;
+          yA = ya;//用于去除过期食品
+          }while(map[xa][ya] == 1 || map[xa][ya] == 3);
+          map[xa][ya] = 2;
+          }
+
+          if(r2 == round2)
+          {
+        do
+          { round2 = rand() % 14 + 20 +l*5;
+           r2 = 0;
+          map[xB][yB] = 0;
+          xb = rand_food_x();
+          yb = rand_food_y() * xb %20;
+          xB = xb;
+          yB = yb;//用于去除过期食品
+          }while(map[xb][yb] == 1 || map[xb][yb] == 3);
+          map[xb][yb] = 2;
+          }
+
+          if(r3 == round3)
+          {
+        do
+          { round3 = rand() % 8 + 16 +l*5;
+           r3 = 0;
+          map[xC][yC] = 0;
+          xc = rand_food_x();
+          yc = rand_food_y();
+          xC = xc;
+          yC = yc;//用于去除过期食品
+          }while(map[xc][yc] == 1 || map[xc][yc] == 3);
+          map[xc][yc] = 2;
+          }
+
+          //生成掉落物 通过一个中心来带动周围0—3个方块 从上到下有20格的移动空间，移动20r后，清除
+          //碰到则结束游戏，或是cut
+                if (r4 == round4)
+              {
+
+
+
+              b1 = rand() * rand()%4;
+              blocks_y[0] =blocks_fall();//初始位置别忘了调整  变为左中右三条
+              blocks_x[0] = 2;//方块核心初始位置
+
+              blocks_y[1] =blocks_fall();
+              blocks_x[1] = 1;//用于清除方块留下weiji
+
+              r4 = 0;
+
+              }
+
+
+              map[blocks_x[0]][blocks_y[0]] = 4;
+              map[blocks_x[1]][blocks_y[1] ] = 0;
+           //附近方块
+              map[blocks_x[0]][blocks_y[0] + b1] =4;
+              map[blocks_x[0]][blocks_y[0] - b1] =4;
+
+              map[blocks_x[0]][blocks_y[0]] = 4;
+              map[blocks_x[1]][blocks_y[1] ] = 0;
+
+              map[blocks_x[1]][blocks_y[1] + b1] =0;
+              map[blocks_x[1]][blocks_y[1] - b1] =0; //非连续！！！
+
+              blocks_x[0] +=1;
+              blocks_x[1] +=1;
+
+
+            //生成掉落物之2  自下而上
+              if (r5 == round5)
+              {
+
+              b2 = blocks_fall() % 2;
+              blocks_y[2] = blocks_fall() * blocks_fall() %16 +2  ;//初始位置别忘了调整  变为左中右三条
+              blocks_x[2] = 18;//方块核心初始位置
+
+              blocks_y[3] = blocks_fall() * blocks_fall() % 16+2   ;
+              blocks_x[3] = 19;//用于清除方块留下weiji
+
+              r5 = 0;
+
+              }
+
+
+              map[blocks_x[2]][blocks_y[2]] = 4;
+              map[blocks_x[3]][blocks_y[3] ] = 0;
+           //附近方块
+              map[blocks_x[2]][blocks_y[2] + b2] =4;
+              map[blocks_x[2]][blocks_y[2] - b2] =4;
+
+
+              map[blocks_x[3]][blocks_y[3] + b2] =0;
+              map[blocks_x[3]][blocks_y[3] - b2] =0; //非连续！！！
+
+              blocks_x[2] -=1;
+              blocks_x[3] -=1;
+
+
+
+//上面代码有错
+
+//生成障碍 自左而右
+
+ if (r6 == round6)
+              {
+
+              b3 = rand() % 3;
+              blocks_y[4] = 3 ;//初始位置别忘了调整  变为左中右三条
+              blocks_x[4] = blocks_fall() * blocks_fall() * blocks_fall() % 16 +3 ;//方块核心初始位置
+
+              blocks_y[5] = 2;
+              blocks_x[5] = blocks_fall() * blocks_fall() * blocks_fall() % 16 +3 ;//用于清除方块留下weiji
+
+              r6 = 0;
+
+              }
+
+
+              map[blocks_x[4]][blocks_y[4]] = 4;
+              map[blocks_x[5]][blocks_y[5] ] = 0;
+           //附近方块
+              map[blocks_x[4]][blocks_y[4] + b3] =4;
+              map[blocks_x[5]][blocks_y[5] - b3] =4;
+
+
+              map[blocks_x[5]][blocks_y[5] + b3] =0;
+              map[blocks_x[5]][blocks_y[5] - b3] =0; //非连续！！！
+
+              blocks_y[4] +=1;
+              blocks_y[5] +=1;
+
+
+
+
+           r4+=1;
+           r5 +=1;
+           r6+= 1;
+
+
+           r1 +=1;
+           r2 +=1;
+           r3+=1;
+           Sleep(tim);
+           l = 0;
+           result = judge_(xa,ya,snake_x[0],snake_y[0]);
+           result2 = judge_(xb,yb,snake_x[0],snake_y[0]);
+           result3 = judge_(xc,yc,snake_x[0],snake_y[0]);
+
+           result4 = judge_(xa,ya,snake_x2[0],snake_y2[0]);
+           result5 = judge_(xb,yb,snake_x2[0],snake_y2[0]);
+           result6 = judge_(xc,yc,snake_x2[0],snake_y2[0]);
+           //判断蛇是否咬到自己
+           //1p
+
+           for(i=1;i<length;i++)
+           {
+               if(snake_x[0] == snake_x[i] && snake_y[0] == snake_y[i])
+               {   cut = 0;
+                   cut = i ;//开始剪切的节数
+                   length = cut;
+                   printf("\a");
+                   break;
+               }
+
+                else if(snake_x[i] == blocks_x[0] && snake_y[i] == blocks_y[0]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+                else if(snake_x[i] == blocks_x[0] && snake_y[i] == blocks_y[0] -b1 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+                else if(snake_x[i] == blocks_x[0] && snake_y[i] == blocks_y[0] + b1  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+//上面为 蛇碰到第一个组障碍，下为第二组
+
+                else if(snake_x[i] == blocks_x[2] && snake_y[i] == blocks_y[2]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+                else if(snake_x[i] == blocks_x[2] && snake_y[i] == blocks_y[2] -b2 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+                else if(snake_x[i] == blocks_x[2] && snake_y[i] == blocks_y[2] + b2  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+//上面为第二组
+
+
+                else if(snake_x[i] == blocks_x[4] && snake_y[i] == blocks_y[4]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+                else if(snake_x[i] == blocks_x[4] && snake_y[i] == blocks_y[4] -b3 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+                else if(snake_x[i] == blocks_x[4] && snake_y[i] == blocks_y[4] + b3  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length = cut;
+                   break;
+               }
+
+                   else if(snake_x[i] == snake_x2[0] && snake_y[i] == snake_y2[0])
+                   {
+                   cut = 0;
+                   cut = i;
+                   length = cut +1;
+                   scores2 +=500; //咬到对方加500
+                   length2 += (length - i);
+                   break;
+                   }
+               }
+
+               //上面为障碍物的判定   1p
+
+
+               //2p 障碍物及咬到自己判定
+               for(i=1;i<length2;i++)
+           {
+               if(snake_x2[0] == snake_x2[i] && snake_y2[0] == snake_y2[i])
+               {   cut = 0;
+                   cut = i ;//开始剪切的节数
+                   length2 = cut;
+                   printf("\a");
+                   break;
+               }
+
+               else if(snake_x2[i] == snake_x[0] && snake_y2[i] == snake_y[0])
+                   {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut + 1;
+
+                   scores +=500; //咬到对方加500
+                   length += (length2 - i);
+                      break;                                                            //同化对方能力
+                   }
+
+                else if(snake_x2[i] == blocks_x[0] && snake_y2[i] == blocks_y[0]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[0] && snake_y2[i] == blocks_y[0] -b1 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[0] && snake_y2[i] == blocks_y[0] + b1  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+//上面为 蛇碰到第一个组障碍，下为第二组
+
+                else if(snake_x2[i] == blocks_x[2] && snake_y2[i] == blocks_y[2]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[2] && snake_y2[i] == blocks_y[2] -b2 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[2] && snake_y2[i] == blocks_y[2] + b2  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+//上面为第二组
+
+
+                else if(snake_x2[i] == blocks_x[4] && snake_y2[i] == blocks_y[4]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[4] && snake_y2[i] == blocks_y[4] -b3 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[4] && snake_y2[i] == blocks_y[4] + b3  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+               //上面为障碍物的判定
+
+           }
+          // 2p
+        for(i=1;i<length2;i++)
+           {
+               if(snake_x2[0] == snake_x2[i] && snake_y2[0] == snake_y2[i])
+               {   cut = 0;
+                   cut = i ;//开始剪切的节数
+                   length2 = cut;
+                   printf("\a");
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[0] && snake_y2[i] == blocks_y[0]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[0] && snake_y2[i] == blocks_y[0] -b1 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[0] && snake_y2[i] == blocks_y[0] + b1  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+//上面为 蛇碰到第一个组障碍，下为第二组
+
+                else if(snake_x2[i] == blocks_x[2] && snake_y2[i] == blocks_y[2]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[2] && snake_y2[i] == blocks_y[2] -b2 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[2] && snake_y2[i] == blocks_y[2] + b2  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+//上面为第二组
+
+
+                else if(snake_x2[i] == blocks_x[4] && snake_y2[i] == blocks_y[4]  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[4] && snake_y2[i] == blocks_y[4] -b3 )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+                else if(snake_x2[i] == blocks_x[4] && snake_y2[i] == blocks_y[4] + b3  )
+               {
+                   cut = 0;
+                   cut = i;
+                   length2 = cut;
+                   break;
+               }
+
+               //上面为障碍物的判定
+
+           }
+
+//上面为2p
+
+            //1p
+           switch (result)
+           {
+           case 0:
+               system("cls");
+               printf("\n\n\n\t\t\tGAME OVER!\n\t\t\t1p dead");
+               printf("\nSCORES\n1p:%d\t2p:%d",scores,scores2);
+               getchar();
+               getchar();
+            exit(0);
+
+            break;
+           case 1:
+            scores +=100;
+            length +=1;
+            l+=1;
+            printf("\a");
+             break;
+           }
+
+
+            switch (result2)
+            {
+            case 1:
+            scores +=100;
+            length +=1;
+            l+=1;
+            printf("\a");
+            break;
+
+            }
+
+            switch (result3)
+            {
+            case 1:
+            scores +=100;
+            length +=1;
+            l+=1;
+            printf("\a");
+            break;
+
+            }
+
+            //下面为2p
+            switch (result4)
+           {
+           case 0:
+               system("cls");
+               printf("\n\n\n\n\t\t\tGAME OVER!\n\t\t\t2p dead");
+              printf("\nSCORES\n1p:%d\t2p:%d",scores,scores2);
+               getchar();
+               getchar();
+            exit(0);
+
+            break;
+           case 1:
+            scores2 +=100;
+            length2 +=1;
+            l+=1;
+            printf("\a");
+             break;
+           }
+
+
+            switch (result5)
+            {
+            case 1:
+            scores2 +=100;
+            length2 +=1;
+            l+=1;
+            printf("\a");
+            break;
+
+            }
+
+            switch (result6)
+            {
+            case 1:
+            scores2 +=100;
+            length2 +=1;
+            l+=1;
+            printf("\a");
+            break;
+
+            }
+
+
+
+            //
+      tim -= l *20;
+
+      printf("\nSCORES\n1p:%d\t2p:%d",scores,scores2);
+    }
+
+    //一次移动结束 开始判定
+
+    else
+    {
+
+    //蛇的移动
+        char ch1,ch2;
+       //fangxiang
+        ch1 = getch();
+        ch2 = ch1;
+
+        if (dir1 == 1)//down
+        {
+        switch(ch1)
+        {
+        case 'a' :
+        dir2 = -1,dir1 = 0;
+        break;
+        case 'd' :
+        dir2 = 1,dir1 = 0;
+        break;
+        }
+        }
+        if(dir1 == -1) //up
+        {
+        switch(ch1)
+        {
+        case 'a' :
+        dir2 = -1,dir1 = 0;
+        break;
+        case 'd' :
+        dir2 = 1,dir1 = 0;
+        }}
+        if(dir2 == 1)
+        {
+         switch(ch1)
+         {
+
+        case 'w' :
+        dir1 = -1,dir2 = 0;
+        break;
+        case 's' :
+        dir1 = 1, dir2 = 0;
+        }}
+
+        if(dir2 == -1)
+        {
+        switch(ch1)
+        {
+        case 'w' :
+        dir1 = -1,dir2 = 0;
+        break;
+        case 's' :
+        dir1 = 1, dir2 = 0;
+        }}
+        //上面为1p的方向
+
+
+
+        if (dir3 == 1)//down
+        {
+        switch(ch2)
+        {
+        case 75 :
+        dir4 = -1,dir3 = 0;
+        break;
+        case  77 :
+        dir4 = 1,dir3 = 0;
+        break;
+        }
+        }
+        if(dir3 == -1) //up
+        {
+        switch(ch2)
+        {
+        case  75 : //left
+        dir4 = -1,dir3 = 0;
+        break;
+        case 77 : //right
+        dir4 = 1,dir3 = 0;
+        }}
+        if(dir4 == 1)
+        {
+         switch(ch2)
+         {
+
+        case 72 : //up
+        dir3 = -1,dir4 = 0;
+        break;
+        case 80 : //down
+        dir3 = 1, dir4 = 0;
+        }}
+
+        if(dir4 == -1)
+        {
+        switch(ch2)
+        {
+        case 72 :
+        dir3 = -1,dir4 = 0;
+        break;
+        case 80 :
+        dir3 = 1, dir4 = 0;
+        }}
+
+
+
+
+    }
+
+
+}
+
+    return 0;
+}
+
+
+
+//生成食物的随机数//
+int rand_food_x(void)
+{int x,y;
+srand(time(NULL));
+x = rand() % 20;
+
+return x;
+}
+
+int rand_food_y(void)
+{int x,y;
+srand(time(NULL));
+y = rand() % 20;
+return y;
+}
+
+
+int judge_(int x,int y,int s_x,int s_y)
+{
+
+    if (s_x == 0 || s_x == 21 || s_y ==0 || s_y == 21)
+    {
+        return 0; //游戏结束
+    }
+
+    else if(s_x == x && s_y == y)
+    {
+         return 1; //吃到食物得分
+    }
+    else
+    {
+        return 3;
+    }
+}
+
+
+
+int blocks_fall(void)
+{
+    int x;
+    srand(time(NULL));
+    x = rand() % 15 +4;
+    return x;
+}  //掉落的方块的中心x坐标
+
+
+//下面网上找来的改颜色
+
+void color(short x)	//自定义函根据参数改变颜色
+{
+    if(x>=0 && x<=15)//参数在0-15的范围颜色
+    	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), x);	//只有一个参数，改变字体颜色
+    else//默认的颜色白色
+    	SetConsoleTextAttribute(GetStdHandle(STD_OUTPUT_HANDLE), 7);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
